@@ -303,6 +303,9 @@ public final class SettingsPage {
         case "fcm_force_registration":
           addPickerRow(item, v -> forceFcmRegistration());
           break;
+        case "template_manager":
+          addManagerRow(item);
+          break;
         default:
           addToggleRow(item);
       }
@@ -543,6 +546,18 @@ public final class SettingsPage {
     };
 
     showChoicePicker(item, values, labels, reactionTarget());
+  }
+
+  private void addManagerRow(KnotConfig.Item item) {
+    String value = ModuleResources.get(R.string.cmd_manager_count, TemplateManager.count());
+    row()
+        .title(item.label())
+        .description(item.description())
+        .value(value)
+        .searchTag(SettingsViews.searchTag(item.label(), item.description()))
+        .divider()
+        .onClick(v -> TemplateManager.showTemplates(ctx, () -> dialog.onConfigChanged()))
+        .add();
   }
 
   private void openHomeTypePicker(KnotConfig.Item item) {

@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="xposed_desc">Knot - LINE功能擴充模組</string>
+    <string name="xposed_desc">Knot (Custom by taniniya) - LINE功能擴充模組（改良版）</string>
+    <!-- Shown under the name to mark this as a modified build -->
+    <string name="custom_build_label">改良版 / Custom by taniniya</string>
     <!-- Language -->
     <string name="opt_language_label">語言</string>
     <string name="opt_language_desc">Knot本身的畫面與對話框所使用的語言。選擇「系統預設」即可跟隨裝置的語言設定。</string>
@@ -9,6 +11,8 @@
     <string name="language_name">繁體中文</string>
     <!-- Common -->
     <string name="settings_title">模組設定</string>
+    <!-- Entry shown in LINE's settings list; marks this as the modified build -->
+    <string name="settings_row_title">Knot設定（改良版）</string>
     <string name="settings_reset">重設設定</string>
     <string name="settings_reset_confirm">要將所有設定恢復為預設值嗎？</string>
     <string name="settings_reset_ok">重設</string>
@@ -86,6 +90,11 @@
     <string name="read_history_delete_confirm_msg">要刪除此聊天室的所有已讀記錄嗎？</string>
     <string name="read_history_unknown_msg">(未知的訊息)</string>
     <string name="read_history_show_all">顯示其餘%1$d人 ▼</string>
+    <string name="read_users_title">已讀者</string>
+    <string name="read_users_no_message">無法識別這則訊息。</string>
+    <string name="read_users_empty">這則訊息還沒有記錄到已讀者。</string>
+    <string name="read_users_count">%1$d 人已讀</string>
+    <string name="read_users_setting_hint">在 Knot 設定中開啟「記錄已讀記錄」後，才會開始記錄之後的已讀者。</string>
     <string name="read_history_collapse">收合 ▲</string>
     <!-- Message type placeholders -->
     <string name="msg_sticker">[貼圖]</string>
@@ -97,7 +106,7 @@
     <string name="opt_prevent_mark_as_read_label">在加號選單中加入「避免已讀」</string>
     <string name="opt_prevent_mark_as_read_desc">可從聊天分頁右上角的「+」選單開關避免已讀功能。開啟後會一併顯示「傳送後標示已讀」與「表情貼回應後標示已讀」選項。</string>
     <string name="opt_record_read_history_label">記錄已讀記錄</string>
-    <string name="opt_record_read_history_desc">記錄誰在何時已讀了訊息。可從聊天畫面上方的書本圖示查看。</string>
+    <string name="opt_record_read_history_desc">記錄誰在何時已讀了訊息。可從聊天畫面上方的書本圖示查看，也可以在訊息上長按後選擇「已讀者」，只看該訊息自己的已讀者。</string>
     <string name="opt_enable_scroll_preview_label">啟用無痕預覽</string>
     <string name="opt_enable_scroll_preview_desc">重新啟用已從LINE Labs移除的無痕預覽功能。※僅支援LINE 26.15.0以上版本。</string>
     <string name="opt_classic_chat_list_menu_label">聊天列表的長按選單使用舊版顯示</string>
@@ -278,4 +287,72 @@
     <string name="main_row_settings_desc">長按LINE主頁畫面的齒輪圖示</string>
     <string name="main_open_line">開啟LINE</string>
     <string name="main_line_not_installed">尚未安裝LINE</string>
+    <!-- Commands & templates -->
+    <string name="sec_chat_quick">範本</string>
+    <string name="opt_template_manager_label">範本管理</string>
+    <string name="opt_template_manager_desc">統一管理常傳送的文字與機器人指令。在啟動器中點選就會放入輸入欄，也可新增、編輯、排序、刪除。加入自由輸入區塊或選擇區塊後，使用時只要填寫即可完成。</string>
+    <string name="opt_template_dot_prefix_label">在範本開頭加上 .</string>
+    <string name="opt_template_dot_prefix_desc">將範本放入輸入欄時，在開頭加上「.」（許多機器人以此辨識文字指令）。已以 . 開頭的範本不會重複加上。也可在範本啟動器上方切換。</string>
+    <string name="opt_command_chip_label">在聊天畫面顯示啟動器按鈕</string>
+    <string name="opt_command_chip_desc">在聊天畫面的輸入欄上方顯示開啟範本的小型 ⚡ 按鈕。預設為關閉（＋面板內的按鈕才是主要入口）。長按按鈕可將它隱藏。</string>
+    <string name="opt_plus_panel_icons_label">在＋面板中顯示範本</string>
+    <string name="opt_plus_panel_icons_desc">在聊天畫面輸入欄下方開啟的＋面板中顯示「範本」按鈕與「.」開關。面板關閉時會一併消失。</string>
+    <string name="opt_plus_menu_commands_label">在＋選單中加入範本</string>
+    <string name="opt_plus_menu_commands_desc">在聊天分頁右上角的＋選單中加入「範本」。變更後需要重新啟動LINE。</string>
+
+    <string name="quick_launcher_templates">範本</string>
+    <string name="quick_launcher_chip_hint">可從 ⚡ 呼叫範本。長按按鈕可將它隱藏。</string>
+    <string name="quick_launcher_chip_hidden">已隱藏啟動器按鈕。可在Knot設定 →「聊天」中重新開啟。</string>
+    <string name="quick_launcher_dot_switch">開頭加上 .</string>
+    <string name="quick_panel_dot_on">. 開</string>
+    <string name="quick_panel_dot_off">. 關</string>
+    <string name="quick_launcher_fill_title">填寫區塊</string>
+    <string name="quick_launcher_insert">放入輸入欄</string>
+    <string name="quick_launcher_back">返回</string>
+    <string name="quick_launcher_free_hint">%1$s</string>
+    <string name="quick_launcher_choice_pick">請選擇</string>
+    <string name="quick_launcher_choice_free">也可自行輸入</string>
+    <string name="quick_launcher_copied">找不到輸入欄，已複製到剪貼簿。請在聊天畫面貼上。</string>
+    <string name="quick_launcher_empty_templates">尚無範本。可在Knot設定 →「聊天」→「範本管理」新增。</string>
+
+    <string name="cmd_manager_title_templates">範本管理</string>
+    <string name="cmd_manager_add">＋ 新增</string>
+    <string name="cmd_manager_count">%1$d 筆</string>
+    <string name="cmd_manager_edit">編輯</string>
+    <string name="cmd_manager_move_up">上移</string>
+    <string name="cmd_manager_move_down">下移</string>
+    <string name="cmd_manager_delete">刪除</string>
+    <string name="cmd_manager_delete_confirm">要刪除這個項目嗎？</string>
+    <string name="cmd_manager_empty">尚無資料。點選「＋ 新增」即可加入。</string>
+    <string name="cmd_editor_title_new">新增項目</string>
+    <string name="cmd_editor_title_edit">編輯項目</string>
+    <string name="cmd_editor_title_hint">標題（選填）</string>
+    <string name="cmd_editor_body_hint">例：{入力:名前}さん、こんにちは</string>
+    <string name="cmd_editor_add_free">＋ 自由輸入區塊</string>
+    <string name="cmd_editor_add_choice">＋ 選擇區塊</string>
+    <string name="cmd_editor_hint">自由輸入區塊會在每次使用時請你輸入文字。選擇區塊會將選項以按鈕呈現。區塊會插入在游標位置。</string>
+    <string name="cmd_editor_save">儲存</string>
+    <string name="cmd_editor_free_label_title">自由輸入區塊</string>
+    <string name="cmd_editor_free_label_hint">標籤名稱（例：金額、@ユーザー）</string>
+    <string name="cmd_editor_choice_title">選擇區塊</string>
+    <string name="cmd_editor_choice_options_hint">選項（以逗號或換行分隔。例：表, 裏）</string>
+    <string name="cmd_editor_choice_allow_free">也允許自由輸入</string>
+    <string name="cmd_editor_blocks_summary">%1$d 個區塊：%2$s</string>
+    <string name="cmd_editor_no_blocks">沒有區塊（直接放入輸入欄）</string>
+    <string name="cmd_editor_empty_body">請先輸入內容。</string>
+    <string name="cmd_editor_options_required">請至少輸入一個選項。</string>
+
+    <!-- Read trends -->
+    <string name="read_trends_button">📊 已讀時段</string>
+    <string name="read_trends_title">已讀時段</string>
+    <string name="read_trends_scope_chat">此聊天</string>
+    <string name="read_trends_scope_all">所有聊天</string>
+    <string name="read_trends_empty">尚無已讀紀錄。</string>
+    <string name="read_trends_count">%1$d 次</string>
+    <string name="read_trends_window">%1$s 最多（%2$d 次）</string>
+    <string name="read_trends_distribution">時段分布：</string>
+    <string name="read_trends_last">最近已讀：%1$s</string>
+    <string name="read_trends_member_title">已讀時段：%1$s</string>
+    <string name="read_trends_hint_on">依據Knot記錄的已讀歷史統計。在「已讀者」中點選成員，即可看到該成員的時段。</string>
+    <string name="read_trends_hint_off">已讀歷史記錄為關閉，資料可能較少。開啟Knot設定的「記錄已讀歷史」可累積更多資料。</string>
 </resources>

@@ -23,6 +23,9 @@ import app.zipper.knot.LineVersion;
 import app.zipper.knot.Main;
 import app.zipper.knot.RestartActivity;
 import app.zipper.knot.SettingsStore;
+import app.zipper.knot.commands.QuickStore;
+import app.zipper.knot.hooks.PlusPanelIcons;
+import app.zipper.knot.hooks.ReadUsersMenuHook;
 import app.zipper.knot.mapping.Mappings;
 import app.zipper.knot.ui.settings.KnotSettingsDialog;
 import app.zipper.knot.utils.LineTheme;
@@ -140,6 +143,13 @@ public final class DebugMenu {
     items.put("Restart LINE", () -> RestartActivity.restartNow(activity));
     items.put("Debug info", () -> showText(activity, "Debug info", debugInfo(activity), null));
     items.put("Hook status", () -> showText(activity, "Hook status", hookStatus(), null));
+    items.put(
+        "Read by menu",
+        () -> showText(activity, "Read by menu", ReadUsersMenuHook.diagnostics(), null));
+    items.put("Templates", () -> QuickLauncher.show(activity));
+    items.put(
+        "+ panel icons",
+        () -> showText(activity, "+ panel icons", PlusPanelIcons.diagnostics(), null));
     items.put("Logs", () -> showText(activity, "Logs", logs(), () -> clearLogs(activity)));
 
     String[] labels = items.keySet().toArray(new String[0]);
@@ -216,8 +226,23 @@ public final class DebugMenu {
         "Language",
         () -> ModuleResources.language().isEmpty() ? "system" : ModuleResources.language());
     line(sb, "Hooks", DebugMenu::hookSummary);
+    line(sb, "Read by menu", ReadUsersMenuHook::hookSummary);
+    line(sb, "Quick launcher", DebugMenu::quickLauncher);
     line(sb, "Enabled", DebugMenu::enabledOptions);
     return sb.toString().trim();
+  }
+
+  private static String quickLauncher() {
+    return QuickStore.entries().size()
+        + " templates, + menu "
+        + (QuickStore.plusMenuEnabled() ? "on" : "off")
+        + ", chat button "
+        + (QuickStore.chipEnabled() ? "on" : "off")
+        + ", dot "
+        + (QuickStore.dotPrefix() ? "on" : "off")
+        + (QuickStore.legacyCommandListPresent()
+            ? ", old command list left in the file (ignored)"
+            : "");
   }
 
   private static void line(StringBuilder sb, String key, Callable<String> value) {

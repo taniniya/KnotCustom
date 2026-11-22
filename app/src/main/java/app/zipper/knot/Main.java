@@ -130,6 +130,9 @@ public class Main extends XposedModule {
     SettingsStore.setContext(context);
     SettingsStore.load(options);
     SettingsStore.setLoaded(true);
+    // v3.1.12 defaults, once: drop the bolt button, put the buttons in the + panel
+    app.zipper.knot.commands.QuickStore.applyPanelDefaults();
+    SettingsStore.load(options);
     // Re-read the language now that the store can serve it
     ModuleResources.invalidate();
 
@@ -150,11 +153,18 @@ public class Main extends XposedModule {
     applyHook(new ReadReceiptHandler(), lpparam);
     applyHook(new UnsendProtector(), lpparam);
 
-    if (options.preventMarkAsRead.enabled || options.permanentHideChat.enabled) {
+    if (options.preventMarkAsRead.enabled
+        || options.permanentHideChat.enabled
+        || options.plusMenuCommands.enabled) {
       applyHook(new PlusMenuHook(), lpparam);
+    }
+    if (options.preventMarkAsRead.enabled || options.permanentHideChat.enabled) {
       applyHook(new ChatListMoreMenuHook(), lpparam);
     }
-    if (options.recordReadHistory.enabled) applyHook(new HeaderButtonInjector(), lpparam);
+    if (options.recordReadHistory.enabled) {
+      applyHook(new HeaderButtonInjector(), lpparam);
+      applyHook(new ReadUsersMenuHook(), lpparam);
+    }
     if (options.hideAiIconPermanently.enabled) applyHook(new HideAiIconPermanently(), lpparam);
     if (options.openUrlInDefaultBrowser.enabled) {
       applyHook(new OpenInExternalBrowserHook(), lpparam);

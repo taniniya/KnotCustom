@@ -22,6 +22,11 @@ public final class ModuleResources {
   // A view tag as much as a label, so it is never translated
   public static final String BRAND_NAME = "Knot";
 
+  // This build is a modified one; it names itself differently everywhere it is shown
+  public static final String CUSTOM_BY = "Custom by taniniya";
+
+  public static final String DISPLAY_NAME = BRAND_NAME + " (" + CUSTOM_BY + ")";
+
   public static final String LANGUAGE_KEY = "language";
 
   // Stored value meaning "follow the device language"

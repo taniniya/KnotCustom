@@ -169,13 +169,16 @@ public class MainActivity extends Activity {
       header.addView(icon, lp);
     }
 
-    TextView title = centeredText(getString(R.string.main_title), 22, R.color.knot_text_primary);
+    TextView title = centeredText(getString(R.string.main_title), 20, R.color.knot_text_primary);
     title.setTypeface(null, Typeface.BOLD);
     header.addView(title);
 
     TextView version =
         centeredText("v" + BuildConfig.VERSION_NAME, 13, R.color.knot_text_secondary);
     header.addView(version, spacedAbove(dp(4)));
+
+    TextView badge = centeredText(getString(R.string.custom_build_label), 12, R.color.knot_accent);
+    header.addView(badge, spacedAbove(dp(4)));
 
     TextView hint =
         centeredText(getString(R.string.main_setup_hint), 14, R.color.knot_text_secondary);
@@ -333,7 +336,7 @@ public class MainActivity extends Activity {
           }
 
           TextView label = new TextView(this);
-          label.setText(R.string.app_name);
+          label.setText(R.string.app_name_short);
           label.setTextSize(40);
           label.setLetterSpacing(0.03f);
           label.setTextColor(color(R.color.knot_text_primary));

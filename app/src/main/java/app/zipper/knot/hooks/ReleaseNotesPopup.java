@@ -88,7 +88,7 @@ public class ReleaseNotesPopup implements BaseHook {
     try {
       AlertDialog dialog =
           new AlertDialog.Builder(host, LineTheme.dialogTheme(host))
-              .setTitle(ModuleResources.BRAND_NAME + " v" + BuildConfig.VERSION_NAME)
+              .setTitle(ModuleResources.DISPLAY_NAME + " v" + BuildConfig.VERSION_NAME)
               .setMessage(render(host, notes))
               .setPositiveButton(ModuleResources.get(R.string.common_close), null)
               .setNeutralButton(

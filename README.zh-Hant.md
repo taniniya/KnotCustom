@@ -3,12 +3,26 @@
 [日本語](README.md) | [English](README.en.md) | **繁體中文**
 
 <p>
-  <a href="https://github.com/2b-zipper/Knot/releases/latest"><img src="https://img.shields.io/github/v/release/2b-zipper/Knot?sort=semver&style=flat&label=Release&color=2ea44f" alt="Release"></a>
-  <a href="https://github.com/2b-zipper/Knot/releases"><img src="https://img.shields.io/github/downloads/2b-zipper/Knot/total?style=flat&label=Downloads&color=2ea44f" alt="Downloads"></a>
-  <a href="https://github.com/2b-zipper/Knot/stargazers"><img src="https://img.shields.io/github/stars/2b-zipper/Knot?style=flat&label=Stars&color=2ea44f" alt="Stars"></a>
-  <a href="https://github.com/2b-zipper/Knot/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-GPLv3-2ea44f?style=flat" alt="License"></a>
-  <a href="https://crowdin.com/project/knot"><img src="https://img.shields.io/badge/Crowdin-Translate-2ea44f?style=flat" alt="Crowdin"></a>
+  <a href="https://github.com/taniniya/KnotCustom/releases/latest"><img src="https://img.shields.io/github/v/release/taniniya/KnotCustom?sort=semver&style=flat&label=Release&color=2ea44f" alt="Release"></a>
+  <a href="https://github.com/taniniya/KnotCustom/releases"><img src="https://img.shields.io/github/downloads/taniniya/KnotCustom/total?style=flat&label=Downloads&color=2ea44f" alt="Downloads"></a>
+  <a href="https://github.com/taniniya/KnotCustom/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-GPLv3-2ea44f?style=flat" alt="License"></a>
 </p>
+
+> ## 關於這個儲存庫
+>
+> 這是 [`2b-zipper/Knot`](https://github.com/2b-zipper/Knot)（v3.1.2）的**非官方修改版分支**，修改由 **taniniya** 進行（**Custom by taniniya**）。完整且最新的說明（含本分支的追加功能、範本語法、安裝與更新步驟）請見 [日本語 / README.md](README.md)，本頁只保留原版內容作為參考。
+>
+> - 與原作者（[2b-zipper](https://github.com/2b-zipper)、[Nich87](https://github.com/Nich87)）及 LY Corporation 沒有任何關係。關於本分支的問題請在[本儲存庫](https://github.com/taniniya/KnotCustom)提出。
+> - 依 **GPLv3 第5條**，修改後的原始碼公開於本儲存庫。`LICENSE` 與 `LICENSES/` 維持原樣未作變更。
+> - 應用程式名稱為 **`Knot (Custom by taniniya)`**，套件名稱與原版相同（`app.zipper.knot`）。
+> - 下載請使用 **本分支的 [Releases](https://github.com/taniniya/KnotCustom/releases)**（`Knot-Custom-by-taniniya.apk`，debug 簽章，無法覆蓋原版安裝）。
+>
+> ### 本分支的主要追加與變更
+>
+> 1. 記錄他人訊息的已讀（誰在何時已讀），長按訊息顯示「已讀者」清單。
+> 2. 已讀傾向・時段統計（每個成員容易已讀的時段與最近已讀時間）。
+> 3. 範本快速啟動器（自由輸入／選擇區塊、開頭 `.` 開關），v3.1.14 起「指令」統一併入「範本」。
+> 4. Custom by taniniya 標示（應用程式名稱、設定畫面、README）。
 
 ![Banner](images/banner.png)
 
@@ -81,15 +95,13 @@ Knot是一款開發中的Xposed模組，旨在提升Android版LINE的使用體�
 ## 安裝方式
 
 <p>
-  <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22app.zipper.knot%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2F2b-zipper%2Fknot%22%2C%22author%22%3A%222b-zipper%22%2C%22name%22%3A%22Knot%22%2C%22overrideSource%22%3A%22GitHub%22%7D"><img src="images/badge_obtainium.png" height="75" alt="Get it on Obtainium"></a>
-  &nbsp;&nbsp;
-  <a href="https://github.com/2b-zipper/Knot/releases/latest"><img src="images/badge_github.png" height="75" alt="Get it on GitHub"></a>
+  <a href="https://github.com/taniniya/KnotCustom/releases/latest"><img src="images/badge_github.png" height="75" alt="Get it on GitHub"></a>
 </p>
 
 ### Root環境
 
 1. 安裝與API 102相容的Xposed框架，例如[Vector](https://github.com/JingMatrix/Vector/releases)。
-2. 安裝[Knot](https://github.com/2b-zipper/Knot/releases/latest)，並在管理器中啟用模組。
+2. 安裝 **[Knot (Custom by taniniya)](https://github.com/taniniya/KnotCustom/releases/latest)**，並在管理器中啟用模組。
 3. 將LINE設為作用域（目標應用程式）。
 4. 重新啟動LINE，然後在Knot的模組設定中啟用各項功能。
    * 開啟模組設定的方法：長按主頁分頁右上角的設定按鈕，或從LINE設定中由Knot新增的項目開啟。

@@ -22,6 +22,7 @@ public class ReadReceiptHandler implements BaseHook {
   private static final String TIME_FMT = "yyyy-MM-dd HH:mm:ss";
   private static final String NOP_CHAT_ID = "KNOT_NOP";
   private static final String UNKNOWN_READER_NAME = "Unknown";
+  private static final int BACKFILL_LIMIT = 50;
 
   private static volatile boolean isBulkReading = false;
   private static final Set<String> pendingManualReads = ConcurrentHashMap.newKeySet();
@@ -297,11 +298,15 @@ public class ReadReceiptHandler implements BaseHook {
         if (lastMsgId <= prevHwm) return;
 
         long lowerBound = prevHwm > 0 ? prevHwm : lastMsgId - 1;
+        // Everyone's messages, so readers of other people's messages are recorded too. The first
+        // read event of a chat fills in its newest messages, so their readers show up at once.
         List<LineDBUtils.MessageRecord> records =
-            LineDBUtils.fetchMyMessagesUpTo(chatId, lowerBound, lastMsgId, myMid);
+            prevHwm > 0
+                ? LineDBUtils.fetchMessagesUpTo(chatId, lowerBound, lastMsgId)
+                : LineDBUtils.fetchRecentMessagesUpTo(chatId, lastMsgId, BACKFILL_LIMIT);
 
         ensureMessageEntries(chat, records);
-        boolean marked = markReaderOnMessagesUpTo(chat, readerMid, readTime, lastMsgId);
+        boolean marked = markReaderOnMessagesUpTo(chat, readerMid, readTime, lastMsgId, myMid);
         setReaderHwm(chat, readerMid, lastMsgId);
         if (prevHwm == 0 || !records.isEmpty() || marked) {
           SettingsStore.saveReadHistory(history);
@@ -346,6 +351,7 @@ public class ReadReceiptHandler implements BaseHook {
       JSONObject msg = new JSONObject();
       msg.put("c", record.text);
       msg.put("sn", record.senderName);
+      if (record.senderMid != null) msg.put("sm", record.senderMid);
       msg.put("ct", record.timestamp);
       msg.put("r", new JSONObject());
       messages.put(record.id, msg);
@@ -353,7 +359,8 @@ public class ReadReceiptHandler implements BaseHook {
   }
 
   private boolean markReaderOnMessagesUpTo(
-      JSONObject chat, String readerMid, long readTime, long lastMsgId) throws Exception {
+      JSONObject chat, String readerMid, long readTime, long lastMsgId, String myMid)
+      throws Exception {
     JSONObject messages = chat.optJSONObject("m");
     if (messages == null) return false;
 
@@ -367,6 +374,11 @@ public class ReadReceiptHandler implements BaseHook {
       if (parseLong(key, Long.MAX_VALUE) > lastMsgId) continue;
       JSONObject msg = messages.optJSONObject(key);
       if (msg == null) continue;
+      // A sender does not count as a reader of their own message (entries saved before this
+      // change only hold your own messages, so a missing sender is you)
+      String senderMid = msg.optString("sm", null);
+      if (senderMid == null || senderMid.isEmpty()) senderMid = myMid;
+      if (readerMid.equals(senderMid)) continue;
 
       JSONObject readers = msg.optJSONObject("r");
       if (readers == null) {

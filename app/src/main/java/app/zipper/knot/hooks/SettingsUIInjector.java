@@ -155,7 +155,10 @@ public class SettingsUIInjector implements BaseHook {
   }
 
   private Object onHostDestroy(XposedInterface.Chain chain) throws Throwable {
-    KnotSettingsDialog.onActivityDestroyed((Activity) chain.getThisObject());
+    Activity activity = (Activity) chain.getThisObject();
+    KnotSettingsDialog.onActivityDestroyed(activity);
+    QuickLaunchChip.onActivityDestroyed(activity);
+    PlusPanelIcons.onActivityDestroyed(activity);
     return chain.proceed();
   }
 
@@ -163,7 +166,10 @@ public class SettingsUIInjector implements BaseHook {
     Activity activity = (Activity) chain.getThisObject();
     foregroundActivity = new WeakReference<>(activity);
     KnotSettingsDialog.onActivityResumed(activity);
-    return chain.proceed();
+    Object result = chain.proceed();
+    QuickLaunchChip.onActivityResumed(activity);
+    PlusPanelIcons.onActivityResumed(activity);
+    return result;
   }
 
   private Object injectKnotItems(
@@ -307,7 +313,8 @@ public class SettingsUIInjector implements BaseHook {
       View itemView =
           (View) Reflect.getObjectField(chain.getArg(0), c.settings.fieldViewHolderView);
       if (entryType == c.res.typeSection) {
-        if (itemView instanceof TextView) ((TextView) itemView).setText(BRAND_TAG);
+        if (itemView instanceof TextView)
+          ((TextView) itemView).setText(ModuleResources.DISPLAY_NAME);
       } else if (entryType == c.res.typeRow) {
         bindKnotSettingsRow(itemView, c);
       }
@@ -329,7 +336,11 @@ public class SettingsUIInjector implements BaseHook {
     if (iconView != null) applyKnotIcon(itemView, iconView);
 
     TextView title = itemView.findViewById(c.res.idTitle);
-    if (title != null) title.setText(ModuleResources.get(R.string.settings_title));
+    if (title != null) {
+      String rowTitle = ModuleResources.get(R.string.settings_row_title);
+      if (rowTitle == null || rowTitle.isEmpty()) rowTitle = ModuleResources.DISPLAY_NAME;
+      title.setText(rowTitle);
+    }
     itemView.setOnClickListener(v -> KnotSettingsDialog.show(v.getContext()));
   }
 

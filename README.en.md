@@ -3,14 +3,42 @@
 [日本語](README.md) | **English** | [繁體中文](README.zh-Hant.md)
 
 <p>
-  <a href="https://github.com/2b-zipper/Knot/releases/latest"><img src="https://img.shields.io/github/v/release/2b-zipper/Knot?sort=semver&style=flat&label=Release&color=2ea44f" alt="Release"></a>
-  <a href="https://github.com/2b-zipper/Knot/releases"><img src="https://img.shields.io/github/downloads/2b-zipper/Knot/total?style=flat&label=Downloads&color=2ea44f" alt="Downloads"></a>
-  <a href="https://github.com/2b-zipper/Knot/stargazers"><img src="https://img.shields.io/github/stars/2b-zipper/Knot?style=flat&label=Stars&color=2ea44f" alt="Stars"></a>
-  <a href="https://github.com/2b-zipper/Knot/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-GPLv3-2ea44f?style=flat" alt="License"></a>
-  <a href="https://crowdin.com/project/knot"><img src="https://img.shields.io/badge/Crowdin-Translate-2ea44f?style=flat" alt="Crowdin"></a>
+  <a href="https://github.com/taniniya/KnotCustom/releases/latest"><img src="https://img.shields.io/github/v/release/taniniya/KnotCustom?sort=semver&style=flat&label=Release&color=2ea44f" alt="Release"></a>
+  <a href="https://github.com/taniniya/KnotCustom/releases"><img src="https://img.shields.io/github/downloads/taniniya/KnotCustom/total?style=flat&label=Downloads&color=2ea44f" alt="Downloads"></a>
+  <a href="https://github.com/taniniya/KnotCustom/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-GPLv3-2ea44f?style=flat" alt="License"></a>
 </p>
 
 ![Banner](images/banner.png)
+
+> ## About this repository
+>
+> This is an **unofficial modified fork** of [`2b-zipper/Knot`](https://github.com/2b-zipper/Knot) (v3.1.2). The modifications were made by **taniniya** (**Custom by taniniya**). The full, more detailed documentation is in [日本語 / README.md](README.md).
+>
+> - It is not affiliated with the upstream authors ([2b-zipper](https://github.com/2b-zipper), [Nich87](https://github.com/Nich87)) or with LY Corporation. Please do not send questions or bug reports about this fork to the upstream repository; use [this repository](https://github.com/taniniya/KnotCustom) instead.
+> - In accordance with **GPLv3 section 5**, the modified source code is published in this repository.
+> - `LICENSE` and `LICENSES/` are kept exactly as upstream shipped them.
+> - The app is labelled **`Knot (Custom by taniniya)`**; the package name stays `app.zipper.knot` (it has to match for the module to hook LINE).
+>
+> **Download**: use [this fork's Releases](https://github.com/taniniya/KnotCustom/releases) (`Knot-Custom-by-taniniya.apk`). The APKs are signed with a **debug key**, so they cannot be installed over the upstream release (different signature) — uninstall the upstream module first in that case.
+>
+> ### What this fork adds
+>
+> 1. **Read receipts for other people's messages, and a long-press "Read by" list** — Knot records who read a message and when, for other people's messages as well as your own; long-press a message to see the list.
+> 2. **Read trends by time of day** — per-member "reads around 20:00–23:00 (14)" style summaries and the latest read time (📊 Read trends in the read-history screen).
+> 3. **Template quick launcher with free-input/choice blocks and a leading `.` switch** — see the syntax below.
+> 4. **Custom by taniniya credits** — in the app label, settings credits and this README.
+>
+> ### Template blocks
+>
+> | Syntax | Meaning |
+> | --- | --- |
+> | `{入力:label}` | asks for text every time the template is used |
+> | `{選択:A\|B}` | one of the listed choices, shown as buttons |
+> | `{選択+:A\|B}` | the listed choices, or type something else |
+>
+> Register under **Knot settings → Chat → Template list** (＋ Add, with ＋ Free-input block / ＋ Choice block). Open the launcher from the **Templates button in the `+` panel** of a chat room (next to the `. ON / . OFF` switch), the optional ⚡ button above the message field, or the `+` menu of the Chats tab. An entry without blocks goes straight into the message field; an entry with blocks opens a fill-in screen and puts the finished line into the message field. Nothing is sent for you. The **"Start templates with a dot"** switch adds a leading `.` to whatever is inserted (a template already starting with `.` is left alone).
+>
+> Since v3.1.14 the old "Commands" list is folded into templates: the command list screen, its 26 presets and the Commands tab are gone. A command list left in the settings file by an older version is ignored, not read.
 
 Knot is an Xposed module, currently in development, designed to improve the experience of using LINE on Android.
 
@@ -81,15 +109,15 @@ See the [full feature list](https://knot.2ipper.com/#all-features) on the Knot w
 ## Installation
 
 <p>
-  <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22app.zipper.knot%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2F2b-zipper%2Fknot%22%2C%22author%22%3A%222b-zipper%22%2C%22name%22%3A%22Knot%22%2C%22overrideSource%22%3A%22GitHub%22%7D"><img src="images/badge_obtainium.png" height="75" alt="Get it on Obtainium"></a>
-  &nbsp;&nbsp;
-  <a href="https://github.com/2b-zipper/Knot/releases/latest"><img src="images/badge_github.png" height="75" alt="Get it on GitHub"></a>
+  <a href="https://github.com/taniniya/KnotCustom/releases/latest"><img src="images/badge_github.png" height="75" alt="Get it on GitHub"></a>
 </p>
+
+> This fork is not on the upstream Obtainium link or NPatch's release list; download `Knot-Custom-by-taniniya.apk` from [this fork's Releases](https://github.com/taniniya/KnotCustom/releases).
 
 ### Rooted devices
 
 1. Install an Xposed framework compatible with API 102, such as [Vector](https://github.com/JingMatrix/Vector/releases).
-2. Install [Knot](https://github.com/2b-zipper/Knot/releases/latest) and enable the module in your manager.
+2. Install **[Knot (Custom by taniniya)](https://github.com/taniniya/KnotCustom/releases/latest)** and enable the module in your manager.
 3. Select LINE as the target app (module scope).
 4. Restart LINE, then enable the features you want in Knot's module settings.
    * To open the module settings, long-press the settings button at the top right of the Home tab, or use the entry Knot adds to LINE's settings.
@@ -105,10 +133,10 @@ See the [full feature list](https://knot.2ipper.com/#all-features) on the Knot w
 
 #### 2. Patching and installing
 5. Open NPatch, then grant it storage access and set the directory it will use.
-6. Download and install the latest Knot from the release list on NPatch's home screen.
+6. Download and install `Knot-Custom-by-taniniya.apk` from this fork's [Releases](https://github.com/taniniya/KnotCustom/releases) (the release list inside NPatch points at the upstream module, not at this fork).
 7. Tap the `Start Patch` button and choose a patching method.
    > `Download and Patch from Cloud Proxy` is recommended. If you download LINE yourself from APKMirror or a similar site, we recommend downloading and patching a version Knot has been tested on.
-8. Select a LINE version or APK. On the `New Patch` screen, make sure `Force enable MicroG support` is turned on, then tap the `Start Patch` button at the bottom right to start patching.
+8. Select a LINE version or APK and choose **Knot (Custom by taniniya)** as the module. On the `New Patch` screen, make sure `Force enable MicroG support` is turned on, then tap the `Start Patch` button at the bottom right to start patching.
 9. When patching is done, tap the `Install` button at the bottom right to install it.
    > If Shizuku is installed, it is installed automatically.
 
@@ -117,6 +145,14 @@ See the [full feature list](https://knot.2ipper.com/#all-features) on the Knot w
 11. Tap the banner shown on LINE's Home screen to set the directory Knot will use, then long-press the settings button at the top right of Home to open Knot's module settings.
 12. Enable the features you want in Knot's module settings.
     * To open the module settings, long-press the settings button at the top right of the Home tab, or use the entry Knot adds to LINE's settings.
+
+### Updating to a new version
+
+Knot's settings live in the app's data and are kept: the APKs share the same debug key, so installing over an older one carries them over.
+
+* **Rooted**: install the new `Knot-Custom-by-taniniya.apk` over the old one, keep the module enabled in your manager, then restart LINE.
+* **Non-rooted, module embedded by NPatch**: install the new APK, open NPatch → `Start Patch` for LINE → same method and `Force enable MicroG support` → pick the new Knot as the module → `Start Patch` → `Install` (overwrite). Chat history stays; back it up anyway. Keep the previous `Knot-Custom-by-taniniya-<version>.apk` around if you may want to roll back.
+* **Non-rooted, module loaded by NPatch's manager**: update the module APK and restart LINE.
 
 ## Release types
 
@@ -136,6 +172,12 @@ See the [full feature list](https://knot.2ipper.com/#all-features) on the Knot w
 </table>
 
 ## Developers
+
+**This fork (modifications and added features)**
+
+- [taniniya](https://github.com/taniniya)
+
+**Upstream Knot (base)**
 
 - [2b-zipper](https://github.com/2b-zipper)
 - [Nich87](https://github.com/Nich87)

@@ -1,5 +1,6 @@
 package app.zipper.knot.hooks;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -11,12 +12,17 @@ import app.zipper.knot.Knot;
 import app.zipper.knot.KnotConfig;
 import app.zipper.knot.LineVersion;
 import app.zipper.knot.LoadParam;
+import app.zipper.knot.R;
 import app.zipper.knot.Reflect;
+import app.zipper.knot.commands.QuickStore;
+import app.zipper.knot.ui.QuickLauncher;
 import app.zipper.knot.utils.ModuleResources;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class PlusMenuHook implements BaseHook {
@@ -27,6 +33,7 @@ public class PlusMenuHook implements BaseHook {
 
   private static final int ICON_DP = 28;
   private static final int ICON_ID_BASE = 0x64000001;
+  private static final String TEMPLATE_ICON = "ic_knot_templates";
 
   private static volatile int targetDrawableId = 0;
   private static final Map<Integer, Bitmap> iconStorage = new HashMap<>();
@@ -103,10 +110,25 @@ public class PlusMenuHook implements BaseHook {
               Object composer = chain.getArg(composerArg);
               injectionActive = true;
               try {
+                List<PlusEntry> entries = new ArrayList<>();
                 for (ReadToggle toggle : ReadToggle.values()) {
                   if (!toggle.isAvailable()) continue;
-                  addPlusMenuItem(
-                      itemEntry, composerCls, callbackCls, toggle, callbacks.get(toggle), composer);
+                  entries.add(
+                      new PlusEntry(
+                          ICON_ID_BASE + toggle.ordinal() * 2 + (toggle.isOn() ? 0 : 1),
+                          toggle.label(toggle.isOn()),
+                          callbacks.get(toggle)));
+                }
+                if (QuickStore.plusMenuEnabled()) {
+                  ClassLoader loader = lpparam.classLoader;
+                  entries.add(
+                      new PlusEntry(
+                          actionIconId(),
+                          ModuleResources.get(R.string.quick_launcher_templates),
+                          createActionCallback(loader, callbackCls, () -> openLauncher())));
+                }
+                for (PlusEntry entry : entries) {
+                  addPlusMenuItem(itemEntry, composerCls, callbackCls, entry, composer);
                 }
               } catch (Throwable t) {
                 Knot.log("Knot: PlusMenu error: " + t);
@@ -177,28 +199,70 @@ public class PlusMenuHook implements BaseHook {
       Method itemEntry,
       Class<?> composerCls,
       Class<?> callbackCls,
-      ReadToggle toggle,
-      Object callback,
+      PlusEntry entry,
       Object composer)
       throws Exception {
-    boolean on = toggle.isOn();
     Class<?>[] types = itemEntry.getParameterTypes();
     Object[] args = new Object[types.length];
     boolean idAssigned = false;
     for (int i = 0; i < types.length; i++) {
       Class<?> type = types[i];
       if (type == int.class) {
-        args[i] = idAssigned ? 0 : iconId(toggle, on);
+        args[i] = idAssigned ? 0 : entry.iconId;
         idAssigned = true;
       } else if (type == composerCls) {
         args[i] = composer;
       } else if (type == callbackCls) {
-        args[i] = callback;
+        args[i] = entry.callback;
       } else if (type == String.class) {
-        args[i] = toggle.label(on);
+        args[i] = entry.label;
       }
     }
     itemEntry.invoke(null, args);
+  }
+
+  private static final class PlusEntry {
+    final int iconId;
+    final String label;
+    final Object callback;
+
+    PlusEntry(int iconId, String label, Object callback) {
+      this.iconId = iconId;
+      this.label = label;
+      this.callback = callback;
+    }
+  }
+
+  // Opens the launcher on the screen the menu was used from
+  private static void openLauncher() {
+    Activity activity = SettingsUIInjector.getForegroundActivity();
+    if (activity == null) {
+      Knot.log("Knot: quick launcher has no foreground activity");
+      return;
+    }
+    QuickLauncher.show(activity);
+  }
+
+  private static Object createActionCallback(
+      ClassLoader cl, Class<?> callbackCls, Runnable action) {
+    return Proxy.newProxyInstance(
+        cl,
+        new Class[] {callbackCls},
+        (proxy, method, args) -> {
+          switch (method.getName()) {
+            case "invoke":
+              action.run();
+              return null;
+            case "equals":
+              return proxy == args[0];
+            case "hashCode":
+              return System.identityHashCode(proxy);
+            case "toString":
+              return "knot_quick_launcher";
+            default:
+              return null;
+          }
+        });
   }
 
   private static Object createToggleCallback(
@@ -247,14 +311,16 @@ public class PlusMenuHook implements BaseHook {
     return bmp;
   }
 
-  private static int iconId(ReadToggle toggle, boolean on) {
-    return ICON_ID_BASE + toggle.ordinal() * 2 + (on ? 0 : 1);
+  private static int actionIconId() {
+    return ICON_ID_BASE + ReadToggle.values().length * 2;
   }
 
   private static String iconName(int id) {
     ReadToggle[] toggles = ReadToggle.values();
     int index = id - ICON_ID_BASE;
-    if (index < 0 || index >= toggles.length * 2) return null;
-    return toggles[index / 2].iconName(index % 2 == 0);
+    if (index < 0) return null;
+    if (index < toggles.length * 2) return toggles[index / 2].iconName(index % 2 == 0);
+    if (index == toggles.length * 2) return TEMPLATE_ICON;
+    return null;
   }
 }

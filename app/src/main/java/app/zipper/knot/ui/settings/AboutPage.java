@@ -31,7 +31,7 @@ public final class AboutPage {
   private static final String CROWDIN_URL = "https://crowdin.com/project/knot";
   private static final String KOFI_URL = "https://ko-fi.com/2ipper";
   private static final String[][] CONTRIBUTOR_SECTIONS = {
-    {"2b-zipper", "Nich87"}, {"atuy1219", "nmu-nyasan"},
+    {"2b-zipper", "Nich87", "taniniya"}, {"atuy1219", "nmu-nyasan"},
   };
 
   private static final int[] CONTRIBUTOR_SECTION_TITLES = {
@@ -99,12 +99,15 @@ public final class AboutPage {
     }
 
     TextView name =
-        centeredLabel(ModuleResources.BRAND_NAME, 26, LineTheme.primaryTextColor(ctx), 0);
+        centeredLabel(ModuleResources.DISPLAY_NAME, 24, LineTheme.primaryTextColor(ctx), 0);
     name.setTypeface(null, Typeface.BOLD);
     hero.addView(name);
 
     int subColor = LineTheme.secondaryTextColor(ctx);
     hero.addView(centeredLabel("v" + BuildConfig.VERSION_NAME, 13, subColor, 4));
+    hero.addView(
+        centeredLabel(
+            ModuleResources.get(R.string.custom_build_label), 13, LineTheme.accentGreen(ctx), 4));
     hero.addView(centeredLabel(ModuleResources.get(R.string.about_tagline), 13, subColor, 10));
 
     return hero;

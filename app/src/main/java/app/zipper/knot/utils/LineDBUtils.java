@@ -552,9 +552,31 @@ public class LineDBUtils {
 
   public static List<MessageRecord> fetchMyMessagesUpTo(
       String targetChatId, long minExclusiveId, long maxInclusiveId, String myMid) {
+    if (myMid == null) return new ArrayList<>();
+    return fetch(targetChatId, minExclusiveId, maxInclusiveId, myMid, 0);
+  }
+
+  // Every sender's messages in the range, so read receipts can follow other people's messages too
+  public static List<MessageRecord> fetchMessagesUpTo(
+      String targetChatId, long minExclusiveId, long maxInclusiveId) {
+    return fetch(targetChatId, minExclusiveId, maxInclusiveId, null, 0);
+  }
+
+  // The newest messages up to a read position, for filling a chat in from its first read event
+  public static List<MessageRecord> fetchRecentMessagesUpTo(
+      String targetChatId, long maxInclusiveId, int limit) {
+    return fetch(targetChatId, 0L, maxInclusiveId, null, limit);
+  }
+
+  private static List<MessageRecord> fetch(
+      String targetChatId,
+      long minExclusiveId,
+      long maxInclusiveId,
+      String onlyFromMid,
+      int recentLimit) {
     List<MessageRecord> results = new ArrayList<>();
-    if (targetChatId == null || myMid == null) return results;
-    if (maxInclusiveId <= minExclusiveId) return results;
+    if (targetChatId == null) return results;
+    if (recentLimit <= 0 && maxInclusiveId <= minExclusiveId) return results;
 
     try {
       Context context = Knot.currentApplication();
@@ -567,24 +589,34 @@ public class LineDBUtils {
           SQLiteDatabase.openDatabase(dbFile.getAbsolutePath(), null, SQLiteDatabase.OPEN_READONLY);
 
       try {
-        String sql =
-            "SELECT server_id, content, parameter, from_mid, created_time "
-                + "FROM chat_history WHERE chat_id = ? "
-                + "AND CAST(server_id AS INTEGER) > ? "
-                + "AND CAST(server_id AS INTEGER) <= ? "
-                + "AND (from_mid = ? OR from_mid IS NULL) "
-                + "ORDER BY CAST(server_id AS INTEGER) DESC";
+        StringBuilder sql =
+            new StringBuilder(
+                "SELECT server_id, content, parameter, from_mid, created_time "
+                    + "FROM chat_history WHERE chat_id = ? "
+                    + "AND CAST(server_id AS INTEGER) <= ? ");
+        List<String> args = new ArrayList<>();
+        args.add(targetChatId);
+        args.add(String.valueOf(maxInclusiveId));
+        if (recentLimit <= 0) {
+          sql.append("AND CAST(server_id AS INTEGER) > ? ");
+          args.add(String.valueOf(minExclusiveId));
+        }
+        if (onlyFromMid != null) {
+          sql.append("AND (from_mid = ? OR from_mid IS NULL) ");
+          args.add(onlyFromMid);
+        }
+        sql.append("ORDER BY CAST(server_id AS INTEGER) DESC");
+        if (recentLimit > 0) {
+          sql.append(" LIMIT ?");
+          args.add(String.valueOf(recentLimit));
+        }
 
-        String[] args =
-            new String[] {
-              targetChatId, String.valueOf(minExclusiveId), String.valueOf(maxInclusiveId), myMid
-            };
-
-        Cursor cursor = db.rawQuery(sql, args);
+        Cursor cursor = db.rawQuery(sql.toString(), args.toArray(new String[0]));
         try {
           String currentChatName = null;
-          String senderName = null;
+          String myMid = onlyFromMid;
           SimpleDateFormat dateFormat = null;
+          java.util.Map<String, String> senderNames = new java.util.HashMap<>();
 
           while (cursor.moveToNext()) {
             String mId = cursor.getString(0);
@@ -593,15 +625,24 @@ public class LineDBUtils {
             String fromMid = cursor.getString(3);
             long timeLong = cursor.getLong(4);
 
-            if (fromMid == null) fromMid = myMid;
-            if (!fromMid.equals(myMid)) continue;
+            // Messages you sent yourself have a NULL from_mid
+            if (fromMid == null || fromMid.isEmpty()) {
+              if (myMid == null) myMid = getMyMid();
+              fromMid = myMid;
+            }
+            if (onlyFromMid != null && !onlyFromMid.equals(fromMid)) continue;
 
             if (dateFormat == null) {
               dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
               String resolvedChatName = resolveChatName(db, targetChatId);
               currentChatName = resolvedChatName != null ? resolvedChatName : "Unknown";
-              String resolvedSenderName = resolveMemberName(myMid);
+            }
+
+            String senderName = fromMid == null ? null : senderNames.get(fromMid);
+            if (senderName == null) {
+              String resolvedSenderName = resolveMemberName(fromMid);
               senderName = resolvedSenderName != null ? resolvedSenderName : "Unknown";
+              if (fromMid != null) senderNames.put(fromMid, senderName);
             }
 
             String resolvedText = resolveMessageText(rawContent, rawParam);

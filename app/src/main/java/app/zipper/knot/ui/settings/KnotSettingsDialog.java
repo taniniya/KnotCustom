@@ -5,6 +5,8 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.graphics.Typeface;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,6 +14,7 @@ import android.view.Window;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import app.zipper.knot.BuildConfig;
 import app.zipper.knot.Knot;
 import app.zipper.knot.KnotConfig;
 import app.zipper.knot.LineVersion;
@@ -228,7 +231,10 @@ public final class KnotSettingsDialog {
   private static boolean isImmediateItem(String key) {
     return "prevent_unsend_message".equals(key)
         || "debug_menu".equals(key)
-        || "reaction_notification_target".equals(key);
+        || "reaction_notification_target".equals(key)
+        || "template_dot_prefix".equals(key)
+        || "plus_panel_icons".equals(key)
+        || "command_chip_in_chat".equals(key);
   }
 
   private static String effectiveValue(KnotConfig.Item item) {
@@ -388,6 +394,7 @@ public final class KnotSettingsDialog {
     LinearLayout settingsRoot = new LinearLayout(host);
     settingsRoot.setOrientation(LinearLayout.VERTICAL);
     settingsRoot.setLayoutParams(new FrameLayout.LayoutParams(-1, -1));
+    settingsRoot.addView(buildBuildBanner());
     settingsRoot.addView(searchBar.view());
     settingsRoot.addView(itemHost, new LinearLayout.LayoutParams(-1, -1));
 
@@ -396,6 +403,38 @@ public final class KnotSettingsDialog {
     listParent.addView(pageContainer, listIndex, listLp);
 
     container.setBackgroundColor(LineTheme.backgroundColor(host));
+  }
+
+  // Marks the dialog opened inside LINE as the modified build, right under the header
+  private View buildBuildBanner() {
+    Context ctx = dialogContext();
+    LinearLayout banner = new LinearLayout(ctx);
+    banner.setOrientation(LinearLayout.VERTICAL);
+    banner.setGravity(Gravity.CENTER_HORIZONTAL);
+    banner.setPadding(
+        SettingsViews.dp(ctx, 12),
+        SettingsViews.dp(ctx, 6),
+        SettingsViews.dp(ctx, 12),
+        SettingsViews.dp(ctx, 6));
+    banner.setBackgroundColor(LineTheme.fieldColor(ctx));
+
+    TextView name = new TextView(ctx);
+    name.setText(ModuleResources.DISPLAY_NAME);
+    name.setTextSize(13);
+    name.setTypeface(null, Typeface.BOLD);
+    name.setTextColor(LineTheme.primaryTextColor(ctx));
+    name.setGravity(Gravity.CENTER_HORIZONTAL);
+    banner.addView(name);
+
+    TextView note = new TextView(ctx);
+    String buildLabel = ModuleResources.get(R.string.custom_build_label);
+    if (buildLabel == null || buildLabel.isEmpty()) buildLabel = ModuleResources.CUSTOM_BY;
+    note.setText(buildLabel + " ・ v" + BuildConfig.VERSION_NAME);
+    note.setTextSize(11);
+    note.setTextColor(LineTheme.accentGreen(ctx));
+    note.setGravity(Gravity.CENTER_HORIZONTAL);
+    banner.addView(note);
+    return banner;
   }
 
   private void applySearchQuery(String query) {

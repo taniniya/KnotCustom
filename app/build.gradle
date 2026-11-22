@@ -5,13 +5,13 @@ plugins {
 
 android {
     namespace 'app.zipper.knot'
-    compileSdk 37
+    compileSdk 34
 
     defaultConfig {
         applicationId 'app.zipper.knot'
         minSdk 26
-        targetSdk 35
-        versionName "3.1.2"
+        targetSdk 34
+        versionName "3.1.14-readusers"
         versionCode versionName.split('-')[0].tokenize('.').inject(0) { code, part -> code * 100 + part.toInteger() }
         multiDexEnabled true
     }
@@ -90,4 +90,5 @@ dependencies {
     implementation 'androidx.documentfile:documentfile:1.0.1'
     implementation 'androidx.core:core-splashscreen:1.0.1'
     implementation 'org.luckypray:dexkit:2.3.0'
+    testImplementation 'junit:junit:4.13.2'
 }

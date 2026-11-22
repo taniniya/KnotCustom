@@ -2,6 +2,8 @@ package app.zipper.knot.ui;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
+import android.content.ContextWrapper;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
@@ -13,6 +15,7 @@ import android.widget.BaseAdapter;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import app.zipper.knot.Knot;
 import app.zipper.knot.R;
@@ -32,10 +35,12 @@ public class ReadHistoryViewer {
   private static final int READER_COLLAPSE_THRESHOLD = 5;
 
   private static final class ReaderEntry {
+    final String mid;
     final String name;
     final String time;
 
-    ReaderEntry(String name, String time) {
+    ReaderEntry(String mid, String name, String time) {
+      this.mid = mid;
       this.name = name;
       this.time = time;
     }
@@ -89,7 +94,8 @@ public class ReadHistoryViewer {
       header.setTextSize(18);
       header.setTextColor(LineTheme.primaryTextColor(activity));
       header.setPadding(0, 20, 0, 30);
-      listView.addHeaderView(header, null, false);
+      View headerRow = buildHeaderRow(activity, header, targetChatId);
+      listView.addHeaderView(headerRow, null, false);
 
       final AlertDialog[] dialogRef = new AlertDialog[1];
 
@@ -155,6 +161,194 @@ public class ReadHistoryViewer {
     }
   }
 
+  // One message on its own: the long-press "Read by" entry of the message menu opens this.
+  public static void showForMessage(Context context, String chatId, String msgId) {
+    try {
+      Activity activity = resolveActivity(context);
+      if (activity == null || msgId == null) return;
+      LineTheme.invalidate();
+
+      MessageDetail detail = loadMessageDetail(chatId, msgId);
+
+      ScrollView scrollView = new ScrollView(activity);
+      LinearLayout container = new LinearLayout(activity);
+      container.setOrientation(LinearLayout.VERTICAL);
+      container.setPadding(48, 24, 48, 40);
+      scrollView.addView(container);
+
+      TextView header = new TextView(activity);
+      header.setText(ModuleResources.get(R.string.read_users_title));
+      header.setTextSize(18);
+      header.setTextColor(LineTheme.primaryTextColor(activity));
+      header.setPadding(0, 12, 0, 16);
+      container.addView(header);
+
+      if (detail != null) container.addView(buildMessagePreview(activity, detail));
+
+      final String scopeChatId = detail != null ? detail.chatId : chatId;
+
+      if (detail == null || detail.readers.isEmpty()) {
+        TextView empty = new TextView(activity);
+        empty.setText(ModuleResources.get(R.string.read_users_empty));
+        empty.setPadding(0, 40, 0, 40);
+        empty.setGravity(Gravity.CENTER);
+        empty.setTextColor(LineTheme.secondaryTextColor(activity));
+        container.addView(empty);
+      } else {
+        for (ReaderEntry reader : detail.readers) {
+          container.addView(buildReaderRow(activity, reader, scopeChatId));
+        }
+        container.addView(buildTrendRow(activity, scopeChatId));
+      }
+
+      if (!SettingsStore.get("record_read_history", false)) {
+        TextView hint = new TextView(activity);
+        hint.setText(ModuleResources.get(R.string.read_users_setting_hint));
+        hint.setTextSize(12);
+        hint.setPadding(0, 24, 0, 0);
+        hint.setTextColor(LineTheme.secondaryTextColor(activity));
+        container.addView(hint);
+      }
+
+      int themeId = LineTheme.dialogTheme(activity);
+      AlertDialog.Builder builder =
+          new AlertDialog.Builder(activity, themeId)
+              .setView(scrollView)
+              .setPositiveButton(ModuleResources.get(R.string.common_close), null);
+      String resolvedChatId = detail != null ? detail.chatId : chatId;
+      if (resolvedChatId != null) {
+        final String openChatId = resolvedChatId;
+        builder.setNeutralButton(
+            ModuleResources.get(R.string.read_history_title),
+            (d, which) -> show(activity, openChatId));
+      }
+      AlertDialog dialog = builder.create();
+      dialog.show();
+      LineTheme.applyDialogColors(dialog, activity);
+    } catch (Throwable t) {
+      Knot.log("Knot: read users viewer error: " + t);
+    }
+  }
+
+  private static final class MessageDetail {
+    final String chatId;
+    final String text;
+    final String senderName;
+    final String time;
+    final List<ReaderEntry> readers = new ArrayList<>();
+
+    MessageDetail(String chatId, String text, String senderName, String time) {
+      this.chatId = chatId;
+      this.text = text;
+      this.senderName = senderName;
+      this.time = time;
+    }
+  }
+
+  private static MessageDetail loadMessageDetail(String chatId, String msgId) {
+    synchronized (SettingsStore.class) {
+      JSONObject historyJson = SettingsStore.loadReadHistory();
+      JSONObject chats = historyJson.optJSONObject("c");
+      if (chats == null) return null;
+
+      JSONObject chat = chatId != null ? chats.optJSONObject(chatId) : null;
+      String resolvedChatId = chatId;
+      if (chat == null) {
+        Iterator<String> chatKeys = chats.keys();
+        while (chatKeys.hasNext()) {
+          String chatKey = chatKeys.next();
+          JSONObject candidate = chats.optJSONObject(chatKey);
+          JSONObject messages = candidate == null ? null : candidate.optJSONObject("m");
+          if (messages != null && messages.has(msgId)) {
+            chat = candidate;
+            resolvedChatId = chatKey;
+            break;
+          }
+        }
+      }
+      if (chat == null) return null;
+
+      JSONObject messages = chat.optJSONObject("m");
+      JSONObject msg = messages == null ? null : messages.optJSONObject(msgId);
+      if (msg == null) return null;
+
+      MessageDetail detail =
+          new MessageDetail(
+              resolvedChatId,
+              msg.optString("c", ""),
+              msg.optString("sn", ""),
+              msg.optString("ct", ""));
+
+      JSONObject readersJson = msg.optJSONObject("r");
+      if (readersJson != null) {
+        Iterator<String> rKeys = readersJson.keys();
+        while (rKeys.hasNext()) {
+          String readerMid = rKeys.next();
+          JSONObject reader = readersJson.optJSONObject(readerMid);
+          if (reader != null) {
+            detail.readers.add(
+                new ReaderEntry(
+                    readerMid, reader.optString("n", "Unknown"), reader.optString("t", "")));
+          }
+        }
+      }
+      Collections.sort(detail.readers, (a, b) -> a.time.compareTo(b.time));
+      return detail;
+    }
+  }
+
+  private static View buildMessagePreview(Activity activity, MessageDetail detail) {
+    LinearLayout box = new LinearLayout(activity);
+    box.setOrientation(LinearLayout.VERTICAL);
+    box.setPadding(24, 16, 24, 16);
+
+    GradientDrawable gd = new GradientDrawable();
+    gd.setColor(LineTheme.cardColor(activity));
+    gd.setCornerRadius(12f);
+    box.setBackground(gd);
+
+    TextView text = new TextView(activity);
+    text.setText(
+        detail.text != null && !detail.text.isEmpty()
+            ? detail.text
+            : ModuleResources.get(R.string.read_history_unknown_msg));
+    text.setTextSize(15);
+    text.setTextColor(LineTheme.primaryTextColor(activity));
+    text.setMaxLines(3);
+    box.addView(text);
+
+    String meta =
+        (detail.senderName == null || detail.senderName.isEmpty() ? "" : detail.senderName)
+            + (detail.time == null || detail.time.isEmpty() ? "" : "  " + detail.time);
+    if (!meta.trim().isEmpty()) {
+      TextView metaText = new TextView(activity);
+      metaText.setText(meta.trim());
+      metaText.setTextSize(12);
+      metaText.setTextColor(LineTheme.secondaryTextColor(activity));
+      metaText.setPadding(0, 6, 0, 0);
+      box.addView(metaText);
+    }
+
+    TextView count = new TextView(activity);
+    if (detail.readers.isEmpty()) return box;
+    count.setText(ModuleResources.get(R.string.read_users_count, detail.readers.size()));
+    count.setTextSize(13);
+    count.setTypeface(null, Typeface.BOLD);
+    count.setTextColor(LineTheme.secondaryTextColor(activity));
+    count.setPadding(0, 16, 0, 4);
+    box.addView(count);
+
+    return box;
+  }
+
+  private static Activity resolveActivity(Context context) {
+    while (context instanceof ContextWrapper) {
+      if (context instanceof Activity) return (Activity) context;
+      context = ((ContextWrapper) context).getBaseContext();
+    }
+    return null;
+  }
+
   private static List<MessageEntry> loadEntries(String targetChatId) {
     List<MessageEntry> entries = new ArrayList<>();
     synchronized (SettingsStore.class) {
@@ -193,10 +387,12 @@ public class ReadHistoryViewer {
       if (readersJson != null) {
         Iterator<String> rKeys = readersJson.keys();
         while (rKeys.hasNext()) {
-          JSONObject reader = readersJson.optJSONObject(rKeys.next());
+          String readerMid = rKeys.next();
+          JSONObject reader = readersJson.optJSONObject(readerMid);
           if (reader != null) {
             readers.add(
-                new ReaderEntry(reader.optString("n", "Unknown"), reader.optString("t", "")));
+                new ReaderEntry(
+                    readerMid, reader.optString("n", "Unknown"), reader.optString("t", "")));
           }
         }
       }
@@ -270,6 +466,13 @@ public class ReadHistoryViewer {
           }
         });
 
+    // Long-press a card to see just that message's readers
+    card.setOnLongClickListener(
+        v -> {
+          showForMessage(activity, entry.chatId, entry.msgId);
+          return true;
+        });
+
     return wrapper;
   }
 
@@ -277,22 +480,30 @@ public class ReadHistoryViewer {
     List<ReaderEntry> readers = entry.readers;
     int initialCount = Math.min(readers.size(), READER_COLLAPSE_THRESHOLD);
     for (int i = 0; i < initialCount; i++) {
-      card.addView(buildReaderRow(activity, readers.get(i)));
+      card.addView(buildReaderRow(activity, readers.get(i), entry.chatId));
     }
 
     if (readers.size() > READER_COLLAPSE_THRESHOLD) {
       addReaderToggle(
-          activity, card, entry, readers.subList(READER_COLLAPSE_THRESHOLD, readers.size()));
+          activity,
+          card,
+          entry,
+          entry.chatId,
+          readers.subList(READER_COLLAPSE_THRESHOLD, readers.size()));
     }
   }
 
   private static void addReaderToggle(
-      Activity activity, LinearLayout card, MessageEntry entry, List<ReaderEntry> extraReaders) {
+      Activity activity,
+      LinearLayout card,
+      MessageEntry entry,
+      String chatId,
+      List<ReaderEntry> extraReaders) {
     final String showAll = ModuleResources.get(R.string.read_history_show_all, extraReaders.size());
     final List<View> overflowViews = new ArrayList<>();
     if (entry.expanded) {
       for (ReaderEntry reader : extraReaders) {
-        View row = buildReaderRow(activity, reader);
+        View row = buildReaderRow(activity, reader, chatId);
         overflowViews.add(row);
         card.addView(row);
       }
@@ -311,7 +522,7 @@ public class ReadHistoryViewer {
           if (overflowViews.isEmpty()) {
             int insertIndex = card.indexOfChild(toggle);
             for (ReaderEntry reader : extraReaders) {
-              View row = buildReaderRow(activity, reader);
+              View row = buildReaderRow(activity, reader, chatId);
               overflowViews.add(row);
               card.addView(row, insertIndex++);
             }
@@ -326,7 +537,7 @@ public class ReadHistoryViewer {
     card.addView(toggle);
   }
 
-  private static View buildReaderRow(Activity activity, ReaderEntry reader) {
+  private static View buildReaderRow(Activity activity, ReaderEntry reader, String chatId) {
     LinearLayout detailRow = new LinearLayout(activity);
     detailRow.setOrientation(LinearLayout.HORIZONTAL);
     detailRow.setGravity(Gravity.CENTER_VERTICAL);
@@ -345,7 +556,40 @@ public class ReadHistoryViewer {
     timeText.setPadding(20, 0, 0, 0);
     detailRow.addView(timeText);
 
+    // Tapping a reader shows the hours that person tends to read in
+    if (reader.mid != null && !reader.mid.isEmpty()) {
+      detailRow.setOnClickListener(
+          v -> ReadTrendDialog.showForMember(activity, chatId, reader.mid, reader.name));
+    }
     return detailRow;
+  }
+
+  private static View buildTrendRow(Activity activity, String chatId) {
+    TextView trend = new TextView(activity);
+    trend.setText(ModuleResources.get(R.string.read_trends_button));
+    trend.setTextSize(13);
+    trend.setTypeface(null, Typeface.BOLD);
+    trend.setTextColor(LineTheme.accentGreen(activity));
+    trend.setPadding(0, 14, 0, 4);
+    trend.setOnClickListener(v -> ReadTrendDialog.show(activity, chatId));
+    return trend;
+  }
+
+  private static View buildHeaderRow(Activity activity, TextView title, String chatId) {
+    LinearLayout row = new LinearLayout(activity);
+    row.setOrientation(LinearLayout.HORIZONTAL);
+    row.setGravity(Gravity.CENTER_VERTICAL);
+    row.addView(
+        title, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+
+    TextView trends = new TextView(activity);
+    trends.setText(ModuleResources.get(R.string.read_trends_button));
+    trends.setTextSize(12);
+    trends.setTextColor(LineTheme.accentGreen(activity));
+    trends.setPadding(20, 20, 0, 26);
+    trends.setOnClickListener(v -> ReadTrendDialog.show(activity, chatId));
+    row.addView(trends);
+    return row;
   }
 
   private static void clearChatHistory(String chatId) {
