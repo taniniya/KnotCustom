@@ -126,7 +126,7 @@ public final class TemplateParser {
 
   /**
    * Fills the blocks in order with the given values. A block left empty keeps its token, so an
-   * unfinished entry is visible instead of turning into a malformed command.
+   * unfinished entry is visible instead of turning into a malformed line.
    */
   public static String render(String body, List<String> values) {
     StringBuilder out = new StringBuilder();

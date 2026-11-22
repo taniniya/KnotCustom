@@ -3,7 +3,7 @@ package app.zipper.knot.ui;
 import java.util.List;
 
 /**
- * Where the "commands" and "templates" buttons go inside LINE's {@code +} panel.
+ * Where the "templates" button goes inside LINE's {@code +} panel.
  *
  * <p>The panel is LINE's own grass of icon cells, so its geometry is read from the cells that are
  * already on screen: the lowest row decides whether the extra row fits under it, and otherwise the
